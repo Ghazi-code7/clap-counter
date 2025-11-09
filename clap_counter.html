@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clap Counter</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            max-width: 500px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 0.9em;
+        }
+
+        .counter-display {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 15px;
+            padding: 40px;
+            margin: 30px 0;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        }
+
+        .clap-emoji {
+            font-size: 4em;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .count {
+            font-size: 5em;
+            font-weight: bold;
+            color: white;
+            margin: 10px 0;
+        }
+
+        .label {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 1.2em;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin: 20px 0;
+        }
+
+        button {
+            padding: 15px 30px;
+            font-size: 1em;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        #startBtn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        #startBtn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        #startBtn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        #resetBtn {
+            background: #f56565;
+            color: white;
+        }
+
+        #resetBtn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(245, 101, 101, 0.4);
+        }
+
+        .status {
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-weight: 500;
+        }
+
+        .status.listening {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status.stopped {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .status.waiting {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .audio-visualizer {
+            height: 60px;
+            background: #f7fafc;
+            border-radius: 10px;
+            margin: 20px 0;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            gap: 3px;
+            padding: 10px;
+            overflow: hidden;
+        }
+
+        .bar {
+            width: 8px;
+            background: linear-gradient(to top, #667eea, #764ba2);
+            border-radius: 4px;
+            transition: height 0.1s ease;
+        }
+
+        .settings {
+            background: #f7fafc;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            text-align: left;
+        }
+
+        .setting-item {
+            margin: 15px 0;
+        }
+
+        .setting-item label {
+            display: block;
+            margin-bottom: 5px;
+            color: #4a5568;
+            font-weight: 600;
+            font-size: 0.9em;
+        }
+
+        .setting-item input[type="range"] {
+            width: 100%;
+            margin: 5px 0;
+        }
+
+        .setting-value {
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .clap-detected {
+            animation: pulse 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>👏 Clap Counter</h1>
+        <p class="subtitle">Clap your hands to count!</p>
+
+        <div class="counter-display" id="counterDisplay">
+            <span class="clap-emoji">👏</span>
+            <div class="count" id="count">0</div>
+            <div class="label">Claps</div>
+        </div>
+
+        <div class="audio-visualizer" id="visualizer">
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+            <div class="bar"></div>
+        </div>
+
+        <div class="status waiting" id="status">
+            Click "Start Listening" to begin
+        </div>
+
+        <div class="controls">
+            <button id="startBtn">Start Listening</button>
+            <button id="resetBtn">Reset</button>
+        </div>
+
+        <div class="settings">
+            <h3 style="color: #667eea; margin-bottom: 15px;">Settings</h3>
+            
+            <div class="setting-item">
+                <label>Sensitivity: <span class="setting-value" id="thresholdValue">50</span></label>
+                <input type="range" id="threshold" min="10" max="100" value="50">
+                <small style="color: #718096;">Higher = less sensitive (harder claps needed)</small>
+            </div>
+
+            <div class="setting-item">
+                <label>Cooldown: <span class="setting-value" id="cooldownValue">300</span>ms</label>
+                <input type="range" id="cooldown" min="100" max="1000" value="300" step="50">
+                <small style="color: #718096;">Time between detecting claps</small>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let audioContext;
+        let analyser;
+        let microphone;
+        let dataArray;
+        let isListening = false;
+        let clapCount = 0;
+        let lastClapTime = 0;
+        let threshold = 50;
+        let cooldown = 300;
+
+        const startBtn = document.getElementById('startBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const countDisplay = document.getElementById('count');
+        const statusDisplay = document.getElementById('status');
+        const counterDisplay = document.getElementById('counterDisplay');
+        const thresholdSlider = document.getElementById('threshold');
+        const cooldownSlider = document.getElementById('cooldown');
+        const thresholdValue = document.getElementById('thresholdValue');
+        const cooldownValue = document.getElementById('cooldownValue');
+        const visualizerBars = document.querySelectorAll('.bar');
+
+        // Update settings displays
+        thresholdSlider.addEventListener('input', (e) => {
+            threshold = parseInt(e.target.value);
+            thresholdValue.textContent = threshold;
+        });
+
+        cooldownSlider.addEventListener('input', (e) => {
+            cooldown = parseInt(e.target.value);
+            cooldownValue.textContent = cooldown;
+        });
+
+        startBtn.addEventListener('click', async () => {
+            if (!isListening) {
+                await startListening();
+            } else {
+                stopListening();
+            }
+        });
+
+        resetBtn.addEventListener('click', () => {
+            clapCount = 0;
+            countDisplay.textContent = clapCount;
+        });
+
+        async function startListening() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                analyser = audioContext.createAnalyser();
+                microphone = audioContext.createMediaStreamSource(stream);
+                
+                analyser.fftSize = 256;
+                const bufferLength = analyser.frequencyBinCount;
+                dataArray = new Uint8Array(bufferLength);
+                
+                microphone.connect(analyser);
+                
+                isListening = true;
+                startBtn.textContent = 'Stop Listening';
+                startBtn.style.background = '#f56565';
+                statusDisplay.textContent = '🎤 Listening for claps...';
+                statusDisplay.className = 'status listening';
+                
+                detectClaps();
+            } catch (error) {
+                console.error('Microphone access error:', error);
+                statusDisplay.textContent = '❌ Microphone access denied';
+                statusDisplay.className = 'status stopped';
+            }
+        }
+
+        function stopListening() {
+            isListening = false;
+            if (audioContext) {
+                audioContext.close();
+            }
+            startBtn.textContent = 'Start Listening';
+            startBtn.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+            statusDisplay.textContent = '⏸️ Stopped';
+            statusDisplay.className = 'status stopped';
+            
+            // Reset visualizer
+            visualizerBars.forEach(bar => bar.style.height = '5px');
+        }
+
+        function detectClaps() {
+            if (!isListening) return;
+
+            analyser.getByteTimeDomainData(dataArray);
+            
+            // Calculate amplitude
+            let sum = 0;
+            for (let i = 0; i < dataArray.length; i++) {
+                const normalized = (dataArray[i] - 128) / 128;
+                sum += normalized * normalized;
+            }
+            const rms = Math.sqrt(sum / dataArray.length);
+            const amplitude = rms * 100;
+
+            // Update visualizer
+            updateVisualizer(amplitude);
+
+            // Detect clap
+            const currentTime = Date.now();
+            if (amplitude > threshold) {
+                if (currentTime - lastClapTime > cooldown) {
+                    clapCount++;
+                    lastClapTime = currentTime;
+                    countDisplay.textContent = clapCount;
+                    
+                    // Visual feedback
+                    counterDisplay.classList.add('clap-detected');
+                    setTimeout(() => {
+                        counterDisplay.classList.remove('clap-detected');
+                    }, 300);
+                }
+            }
+
+            requestAnimationFrame(detectClaps);
+        }
+
+        function updateVisualizer(amplitude) {
+            const normalizedAmplitude = Math.min(amplitude / threshold, 1);
+            visualizerBars.forEach((bar, index) => {
+                const randomVariation = Math.random() * 0.5 + 0.5;
+                const height = normalizedAmplitude * 40 * randomVariation;
+                bar.style.height = Math.max(height, 5) + 'px';
+            });
+        }
+    </script>
+</body>
+</html>
